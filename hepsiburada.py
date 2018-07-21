@@ -183,8 +183,7 @@ if __name__ == '__main__':
 				print(Fore.RED + 'Please enter Y or N.')
 				
 			else:
-				auto_shutdown == 'n'
-				break
+				print(Fore.RED + 'Please enter Y or N.')
 			
 		except:
 			pass
