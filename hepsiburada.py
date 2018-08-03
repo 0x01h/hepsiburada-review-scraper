@@ -292,7 +292,7 @@ if __name__ == '__main__':
 	paginationWorkers = Pool(proc_num)
 
 	for _ in tqdm.tqdm(paginationWorkers.imap_unordered(paginate_cats, categories), total=len(categories)):
-		sleep(0.05)
+		sleep(0.01)
 		pass
 	
 	paginationWorkers.close()
@@ -311,7 +311,7 @@ if __name__ == '__main__':
 	print(Fore.BLUE + 'Products are coming!' + '\n' + Fore.RESET)
 
 	for _ in tqdm.tqdm(productWorkers.imap_unordered(get_products, categories), total=len(categories)):
-		sleep(0.05)
+		sleep(0.01)
 		pass
 	
 	productWorkers.close()
@@ -334,7 +334,7 @@ if __name__ == '__main__':
 	print(Fore.BLUE + 'Preparing and exporting reviews!' + '\n' + Fore.RESET)
 
 	for _ in tqdm.tqdm(reviewWorkers.imap_unordered(get_reviews, products), total=len(products)):
-		sleep(0.05)
+		sleep(0.01)
 		pass
 
 	reviewWorkers.close()
