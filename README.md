@@ -14,7 +14,7 @@ $ python3 hepsiburada.py
 ```
 
 ## Usage
-Program provides an human-friendly interactive shell for users. Argument parsing is in TODO list.
+Program provides an human-friendly interactive shell for users. *Argument parsing is in TODO list.*
 
 ### Features
 - Shutdown computer after finishing: Optional choice for deep and long scrapings.
