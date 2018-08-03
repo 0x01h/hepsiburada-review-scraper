@@ -2,12 +2,23 @@
 
 import numpy
 import os
+import sys
 import tqdm
 import urllib.request
 from bs4 import BeautifulSoup
-from colorama import Fore
+from colorama import Fore, Back
 from fake_useragent import UserAgent
-from multiprocessing import Pool
+from multiprocessing.dummy import Pool, Lock
+from time import sleep
+
+def show_banner():
+	print(Fore.RED + Back.BLACK + r'''
+ _     ____    ____  _____ _     _  _____ _        ____  ____  ____  ____  ____  _____ ____ 
+/ \ /|/  __\  /  __\/  __// \ |\/ \/  __// \  /|  / ___\/   _\/  __\/  _ \/  __\/  __//  __\
+| |_||| | //  |  \/||  \  | | //| ||  \  | |  ||  |    \|  /  |  \/|| / \||  \/||  \  |  \/|
+| | ||| |_\\  |    /|  /_ | \// | ||  /_ | |/\||  \___ ||  \_ |    /| |-|||  __/|  /_ |    /
+\_/ \|\____/  \_/\_\\____\\__/  \_/\____\\_/  \|  \____/\____/\_/\_\\_/ \|\_/   \____\\_/\_\
+''')
 
 def prepare_scraping(url):
 	
@@ -29,6 +40,7 @@ def prepare_scraping(url):
 		
 def paginate_cats(cat_url):
 	
+	global lock	
 	pure_cat = cat_url.split('?')[0]
 	
 	if (pag_cats[pure_cat] == '1'):
@@ -38,9 +50,11 @@ def paginate_cats(cat_url):
 			response = urllib.request.urlopen(request, timeout=selected_to)
 
 			if (response.getcode() == 200 and len(response.geturl().split('?')) > 1):
+				lock.acquire()
 				with open('categories.txt', 'a') as wFile:
 					wFile.write(cat_url + '\n')
-					return
+				lock.release()
+				return
 				
 			else:
 				pag_cats.update({pure_cat:'0'})
@@ -53,7 +67,8 @@ def paginate_cats(cat_url):
 		return
 
 def get_reviews(prod_page):
-		
+
+	global lock
 	scrape = prepare_scraping(prod_page)
 	next_page = False
 	
@@ -84,11 +99,12 @@ def get_reviews(prod_page):
 				rating = 0
 			
 			row = ('__label__' + str(rating) + ' ' + reviews[i].get_text() + '\n')
-
+			
+			lock.acquire()
 			with open('hepsiburada.txt', 'a') as wFile:
 				wFile.write(row)
-				wFile.close()
-		
+			lock.release()
+
 		if (next_page):
 			return get_reviews(pagination)
 			
@@ -127,6 +143,7 @@ def get_categories(home_url):
 
 def get_products(cat_url):		
 	
+	global lock
 	products = []
 
 	scrape = prepare_scraping(cat_url)
@@ -152,10 +169,12 @@ def get_products(cat_url):
 				
 			else:
 				continue
-				
+		
+		lock.acquire()		
 		with open('products.txt', 'a') as wFile:
 			for product in products:
 				wFile.write(product + '\n')
+		lock.release()
 					
 		return
 
@@ -164,14 +183,16 @@ def get_products(cat_url):
 
 if __name__ == '__main__':
 	
+	show_banner()
 	try:
 		ua = UserAgent()
 	except:
 		ua = UserAgent(use_cache_server=False)
 		
 	all_categories_url = 'https://www.hepsiburada.com/tum-kategoriler'
+	lock = Lock()
 	
-	print(Fore.BLUE + '\n' + 'Process was started successfully!')
+	print(Back.RESET + Fore.BLUE + '\n' + 'Process was started successfully!')
 	
 	while True:
 		try:
@@ -183,23 +204,30 @@ if __name__ == '__main__':
 				print(Fore.RED + 'Please enter Y or N.')
 				
 			else:
-				print(Fore.RED + 'Please enter Y or N.')
+				auto_shutdown == 'n'
+				break
+
+		except KeyboardInterrupt:
+			sys.exit()		
 			
 		except:
 			pass
 	
 	while True:
 		try:
-			proc_num = int(input(Fore.GREEN + 'Enter number of processes to work on exporting reviews: '))
-			if (proc_num < 1 or proc_num > 512):
-				print(Fore.RED + 'Number of processes have to be between 1 and 512.')
+			proc_num = int(input(Fore.GREEN + 'Enter number of threads to work: '))
+			if (proc_num < 1 or proc_num > 2048):
+				print(Fore.RED + 'Number of threads have to be between 1 and 2048.')
 				
 			elif (not isinstance(proc_num, int)):
 				print(Fore.RED + 'Please enter an integer.')
 				
 			else:
 				break
-			
+
+		except KeyboardInterrupt:
+			sys.exit()
+
 		except:
 			pass
 			
@@ -214,6 +242,9 @@ if __name__ == '__main__':
 				
 			else:
 				break
+
+		except KeyboardInterrupt:
+			sys.exit()
 			
 		except:
 			pass
@@ -237,6 +268,9 @@ if __name__ == '__main__':
 				
 			else:
 				break
+
+		except KeyboardInterrupt:
+			sys.exit()
 			
 		except:
 			pass
@@ -255,9 +289,10 @@ if __name__ == '__main__':
 			paginated = categories[category] + '?sayfa=' + str(page)
 			categories.append(paginated)
 		
-	paginationWorkers = Pool(128)
+	paginationWorkers = Pool(proc_num)
 
 	for _ in tqdm.tqdm(paginationWorkers.imap_unordered(paginate_cats, categories), total=len(categories)):
+		sleep(0.05)
 		pass
 	
 	paginationWorkers.close()
@@ -271,11 +306,12 @@ if __name__ == '__main__':
 	
 	print(Fore.BLUE + '\n' + 'Total number of paginated categories: ' + str(len(categories)))
 			
-	productWorkers = Pool(256)
+	productWorkers = Pool(proc_num)
 	
 	print(Fore.BLUE + 'Products are coming!' + '\n' + Fore.RESET)
 
 	for _ in tqdm.tqdm(productWorkers.imap_unordered(get_products, categories), total=len(categories)):
+		sleep(0.05)
 		pass
 	
 	productWorkers.close()
@@ -298,6 +334,7 @@ if __name__ == '__main__':
 	print(Fore.BLUE + 'Preparing and exporting reviews!' + '\n' + Fore.RESET)
 
 	for _ in tqdm.tqdm(reviewWorkers.imap_unordered(get_reviews, products), total=len(products)):
+		sleep(0.05)
 		pass
 
 	reviewWorkers.close()
