@@ -19,7 +19,7 @@ Program provides an human-friendly interactive shell for users. *Argument parsin
 ### Features
 - Shutdown computer after finishing: Optional choice for deep and long scrapings.
 - Threads: Try to give a proper number. *Recommended value is 64.*
-- Timeout: Giving a large number could result in long waiting times, small numbers could lead connection failures. *Recommended time range is 15-20 seconds.*
+- Timeout: Giving a large number could result in long waiting times, small numbers could lead connection failures. *Recommended time range is 15-30 seconds.*
 - Pagination Depth: Maximum number of paginated review pages for each product.
 
 You can track your progress via *progress bars.* `categories.txt`, `products.txt`, `hepsiburada.txt` will be saving to your current directory.
