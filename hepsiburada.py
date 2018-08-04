@@ -8,7 +8,7 @@ import urllib.request
 from bs4 import BeautifulSoup
 from colorama import Fore, Back
 from fake_useragent import UserAgent
-from multiprocessing.dummy import Pool, Lock
+from multiprocessing.dummy import Pool, Semaphore
 from time import sleep
 
 def show_banner():
@@ -23,7 +23,7 @@ def show_banner():
 def prepare_scraping(url):
 	
 	try:
-		request = urllib.request.Request(url, headers={"User-Agent": ua.random})
+		request = urllib.request.Request(url, headers={'User-Agent': ua.random, 'Accept': 'text/html'})
 		response = urllib.request.urlopen(request, timeout=selected_to)
 		
 		if (response.getcode() != 200):
@@ -40,7 +40,6 @@ def prepare_scraping(url):
 		
 def paginate_cats(cat_url):
 	
-	global lock	
 	pure_cat = cat_url.split('?')[0]
 	
 	if (pag_cats[pure_cat] == '1'):
@@ -50,10 +49,8 @@ def paginate_cats(cat_url):
 			response = urllib.request.urlopen(request, timeout=selected_to)
 
 			if (response.getcode() == 200 and len(response.geturl().split('?')) > 1):
-				lock.acquire()
 				with open('categories.txt', 'a') as wFile:
 					wFile.write(cat_url + '\n')
-				lock.release()
 				return
 				
 			else:
@@ -68,9 +65,9 @@ def paginate_cats(cat_url):
 
 def get_reviews(prod_page):
 
-	global lock
 	scrape = prepare_scraping(prod_page)
 	next_page = False
+	global semaphore
 	
 	if (scrape is not None):
 		reviews = scrape.find_all(attrs={"class": "review-text"})
@@ -100,10 +97,10 @@ def get_reviews(prod_page):
 			
 			row = ('__label__' + str(rating) + ' ' + reviews[i].get_text() + '\n')
 			
-			lock.acquire()
+			semaphore.acquire()
 			with open('hepsiburada.txt', 'a') as wFile:
 				wFile.write(row)
-			lock.release()
+			semaphore.release()
 
 		if (next_page):
 			return get_reviews(pagination)
@@ -143,7 +140,6 @@ def get_categories(home_url):
 
 def get_products(cat_url):		
 	
-	global lock
 	products = []
 
 	scrape = prepare_scraping(cat_url)
@@ -169,12 +165,10 @@ def get_products(cat_url):
 				
 			else:
 				continue
-		
-		lock.acquire()		
+			
 		with open('products.txt', 'a') as wFile:
 			for product in products:
 				wFile.write(product + '\n')
-		lock.release()
 					
 		return
 
@@ -183,14 +177,15 @@ def get_products(cat_url):
 
 if __name__ == '__main__':
 	
+	semaphore = Semaphore(3)
 	show_banner()
+	
 	try:
 		ua = UserAgent()
 	except:
 		ua = UserAgent(use_cache_server=False)
 		
 	all_categories_url = 'https://www.hepsiburada.com/tum-kategoriler'
-	lock = Lock()
 	
 	print(Back.RESET + Fore.BLUE + '\n' + 'Process was started successfully!')
 	
@@ -215,11 +210,11 @@ if __name__ == '__main__':
 	
 	while True:
 		try:
-			proc_num = int(input(Fore.GREEN + 'Enter number of threads to work: '))
-			if (proc_num < 1 or proc_num > 2048):
-				print(Fore.RED + 'Number of threads have to be between 1 and 2048.')
+			thread_num = int(input(Fore.GREEN + 'Enter number of threads to work: '))
+			if (thread_num < 1 or thread_num > 512):
+				print(Fore.RED + 'Number of threads have to be between 1 and 512.')
 				
-			elif (not isinstance(proc_num, int)):
+			elif (not isinstance(thread_num, int)):
 				print(Fore.RED + 'Please enter an integer.')
 				
 			else:
@@ -289,10 +284,9 @@ if __name__ == '__main__':
 			paginated = categories[category] + '?sayfa=' + str(page)
 			categories.append(paginated)
 		
-	paginationWorkers = Pool(proc_num)
-
+	paginationWorkers = Pool(thread_num if len(categories) > thread_num else len(categories))
+		
 	for _ in tqdm.tqdm(paginationWorkers.imap_unordered(paginate_cats, categories), total=len(categories)):
-		sleep(0.01)
 		pass
 	
 	paginationWorkers.close()
@@ -306,12 +300,11 @@ if __name__ == '__main__':
 	
 	print(Fore.BLUE + '\n' + 'Total number of paginated categories: ' + str(len(categories)))
 			
-	productWorkers = Pool(proc_num)
+	productWorkers = Pool(thread_num if len(categories) > thread_num else len(categories))
 	
 	print(Fore.BLUE + 'Products are coming!' + '\n' + Fore.RESET)
-
+		
 	for _ in tqdm.tqdm(productWorkers.imap_unordered(get_products, categories), total=len(categories)):
-		sleep(0.01)
 		pass
 	
 	productWorkers.close()
@@ -329,12 +322,11 @@ if __name__ == '__main__':
 	#products = products.tolist()
 	#products = list(set(products))
 
-	reviewWorkers = Pool(proc_num)
+	reviewWorkers = Pool(thread_num)
 	
 	print(Fore.BLUE + 'Preparing and exporting reviews!' + '\n' + Fore.RESET)
 
 	for _ in tqdm.tqdm(reviewWorkers.imap_unordered(get_reviews, products), total=len(products)):
-		sleep(0.01)
 		pass
 
 	reviewWorkers.close()
