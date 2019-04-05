@@ -8,7 +8,7 @@
 
 ## Installation
 ```
-$ git clone https://github.com/n1rv4n4/hepsiburada-review-scraper.git
+$ git clone https://github.com/0x01h/hepsiburada-review-scraper.git
 $ cd hepsiburada-review-scraper
 $ python3 hepsiburada.py
 ```
