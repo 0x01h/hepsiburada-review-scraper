@@ -113,7 +113,7 @@ def get_reviews(prod_page):
                 '\n')
 
             semaphore.acquire()
-            with open('hepsiburada.txt', 'a',encoding="utf-8") as wFile:
+            with open('hepsiburada.txt', 'a', encoding="utf-8") as wFile:
                 wFile.write(row)
             semaphore.release()
 
@@ -183,7 +183,7 @@ def get_products(cat_url):
             else:
                 continue
 
-        with open('products.txt', 'a',encoding="utf-8") as wFile:
+        with open('products.txt', 'a', encoding="utf-8") as wFile:
             for product in products:
                 wFile.write(product + '\n')
 
@@ -306,7 +306,7 @@ if __name__ == '__main__':
         pag_cats.update({categories[category]: '1'})
 
     for category in range(0, len(categories)):
-        with open('categories.txt', 'a',encoding="utf-8") as wFile:
+        with open('categories.txt', 'a', encoding="utf-8") as wFile:
             wFile.write(categories[category] + '\n')
         for page in range(2, pag_num + 1):
             paginated = categories[category] + '?sayfa=' + str(page)
