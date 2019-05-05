@@ -215,7 +215,7 @@ if __name__ == '__main__':
             if (auto_shutdown == 'y' or auto_shutdown == 'n'):
                 break
 
-            elif (not isinstance(auto_shutdown, basestring)):
+            elif (not isinstance(auto_shutdown, str)):
                 print(Fore.RED + 'Please enter Y or N.')
 
             else:
