@@ -1,5 +1,5 @@
 bs4==0.0.1
 colorama==0.4.1
 fake-useragent==0.1.11
-numpy==1.16.0
+numpy==1.16.3
 tqdm==4.31.1
