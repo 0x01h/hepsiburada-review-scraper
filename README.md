@@ -24,6 +24,8 @@ Program provides an human-friendly interactive shell for users.
 
 You can track your progress via *progress bars.* `categories.txt`, `products.txt`, `hepsiburada.txt` will be saving to your current directory.
 
+**Do not scrape aggressively! Otherwise, you will be caught by captcha challenge!*
+
 [![Say thanks.](https://img.shields.io/badge/say-thanks-ff69b4.svg)](https://www.linkedin.com/in/orçunözdemir/)
 
 **For educational purposes only.**
