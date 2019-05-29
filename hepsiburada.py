@@ -29,7 +29,7 @@ def prepare_scraping(url):
             url,
             headers={
                 'User-Agent': ua.random,
-                'Accept': 'text/html'
+                'Accept': 'text/html',
                 'Referer': url
             })
         response = urllib.request.urlopen(request, timeout=selected_to)
