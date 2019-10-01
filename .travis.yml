@@ -1,0 +1,11 @@
+# Disable sudo to speed up the build
+sudo: false
+
+# Set the build language to Python
+language: python
+
+# Set the Python version to 3.7
+python: 3.7
+
+# Install the pip dependencies
+install: pip3 install -r requirements.txt
