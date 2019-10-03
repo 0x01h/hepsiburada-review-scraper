@@ -2,6 +2,7 @@
 
 import numpy
 import os
+import re
 import sys
 import tqdm
 import urllib.request
@@ -10,7 +11,6 @@ from colorama import Fore, Back
 from fake_useragent import UserAgent
 from multiprocessing.dummy import Pool, Semaphore
 from time import sleep
-import re
 
 def show_banner():
     print(Fore.RED + Back.BLACK + r'''
@@ -107,10 +107,9 @@ def get_reviews(prod_page):
             else:
                 rating = 0
 
-            
             review_text = reviews[i].get_text()
-            review_text = re.sub(r"\s+", " ", review_text)
-
+            # Remove additional new lines.
+            review_text = re.sub(r'\s+', ' ', review_text)
 
             row = (
                 '__label__' +
